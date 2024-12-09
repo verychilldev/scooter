@@ -77,19 +77,19 @@
 
     <div class="container">
         <!-- Top Section: Horn -->
-        <div class="section top-section" id="hornSection">
+        <div class="section top-section" id="hornSection" role="button" aria-label="Play horn sound">
             Horn
         </div>
 
         <!-- Bottom Section: Siren -->
-        <div class="section bottom-section" id="sirenSection">
+        <div class="section bottom-section" id="sirenSection" role="button" aria-label="Play siren sound">
             Siren
         </div>
     </div>
 
     <!-- Audio Elements -->
-    <audio id="hornSound" src="./sounds/horn.mp3"></audio>
-    <audio id="sirenSound" src="./sounds/siren.mp3"></audio>
+    <audio id="hornSound" src="./sounds/horn.mp3" preload="auto"></audio>
+    <audio id="sirenSound" src="./sounds/siren.mp3" preload="auto"></audio>
 
     <script>
         // Get references to sections and audio elements
@@ -98,19 +98,46 @@
         const hornSound = document.getElementById('hornSound');
         const sirenSound = document.getElementById('sirenSound');
 
+        let audioInitialized = false;
+
+        // Function to initialize audio context
+        function initAudio() {
+            if (audioInitialized) return;
+            audioInitialized = true;
+
+            // Attempt to unlock audio on user interaction
+            hornSound.play().then(() => {
+                hornSound.pause();
+                hornSound.currentTime = 0;
+            }).catch((error) => {
+                console.log('Horn audio playback not allowed:', error);
+            });
+
+            sirenSound.play().then(() => {
+                sirenSound.pause();
+                sirenSound.currentTime = 0;
+            }).catch((error) => {
+                console.log('Siren audio playback not allowed:', error);
+            });
+        }
+
         // Function to play horn sound
         function playHorn() {
             hornSound.currentTime = 0; // Rewind to start
-            hornSound.play();
+            hornSound.play().catch((error) => {
+                console.log('Error playing horn sound:', error);
+            });
         }
 
         // Function to play siren sound
         function playSiren() {
             sirenSound.currentTime = 0; // Rewind to start
-            sirenSound.play();
+            sirenSound.play().catch((error) => {
+                console.log('Error playing siren sound:', error);
+            });
         }
 
-        // Function to handle interaction (click or touch)
+        // Function to handle interaction (pointerdown)
         function handleInteraction(callback, section) {
             callback();
             // Add active class for visual feedback
@@ -121,57 +148,24 @@
             }, 150);
         }
 
-        // Add event listeners for both mouse and touch events
-        hornSection.addEventListener('click', (e) => {
-            e.preventDefault(); // Prevent default behavior
-            handleInteraction(playHorn, hornSection);
-        });
+        // Unified event handler using pointerdown
+        function setupEvent(section, callback) {
+            section.addEventListener('pointerdown', (e) => {
+                e.preventDefault(); // Prevent default behavior
+                initAudio(); // Ensure audio is initialized
+                handleInteraction(callback, section);
+            });
+        }
 
-        sirenSection.addEventListener('click', (e) => {
-            e.preventDefault(); // Prevent default behavior
-            handleInteraction(playSiren, sirenSection);
-        });
+        // Setup events for both sections
+        setupEvent(hornSection, playHorn);
+        setupEvent(sirenSection, playSiren);
 
-        // Handle touch events for better mobile support
-        hornSection.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // Prevent default behavior
-            handleInteraction(playHorn, hornSection);
-        });
-
-        sirenSection.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // Prevent default behavior
-            handleInteraction(playSiren, sirenSection);
-        });
-
-        // Optional: Preload audio to ensure it's ready to play
+        // Optional: Preload audio (already set via preload="auto" in HTML)
         document.addEventListener('DOMContentLoaded', () => {
             hornSound.load();
             sirenSound.load();
         });
-
-        // Ensure audio plays on user interaction for mobile browsers
-        // Some mobile browsers require a user gesture to unlock audio
-        function initAudio() {
-            hornSound.play().then(() => {
-                hornSound.pause();
-                hornSound.currentTime = 0;
-            }).catch((error) => {
-                // Autoplay was prevented
-                console.log('Audio playback not allowed:', error);
-            });
-
-            sirenSound.play().then(() => {
-                sirenSound.pause();
-                sirenSound.currentTime = 0;
-            }).catch((error) => {
-                // Autoplay was prevented
-                console.log('Audio playback not allowed:', error);
-            });
-        }
-
-        // Initialize audio on first user interaction
-        document.body.addEventListener('touchstart', initAudio, { once: true });
-        document.body.addEventListener('click', initAudio, { once: true });
     </script>
 
 </body>
