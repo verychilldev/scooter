@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sound Effects Player</title>
+    <style>
+        /* Reset default margins and paddings */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Make the body take the full viewport height */
+        body, html {
+            height: 100%;
+            width: 100%;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Container to hold both sections */
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+        }
+
+        /* Common styles for both sections */
+        .section {
+            flex: 1; /* Equal height for both sections */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        /* Top section styles */
+        .top-section {
+            background-color: #4CAF50; /* Green */
+            color: white;
+            font-size: 2em;
+        }
+
+        /* Bottom section styles */
+        .bottom-section {
+            background-color: #f44336; /* Red */
+            color: white;
+            font-size: 2em;
+        }
+
+        /* Hover effects */
+        .section:hover {
+            opacity: 0.8;
+        }
+
+        /* Responsive text */
+        @media (max-width: 600px) {
+            .section {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Top Section: Horn -->
+        <div class="section top-section" id="hornSection">
+            Horn
+        </div>
+
+        <!-- Bottom Section: Siren -->
+        <div class="section bottom-section" id="sirenSection">
+            Siren
+        </div>
+    </div>
+
+    <!-- Audio Elements -->
+    <audio id="hornSound" src="/sounds/horn.mp3"></audio>
+    <audio id="sirenSound" src="/sounds/siren.mp3"></audio>
+
+    <script>
+        // Get references to sections and audio elements
+        const hornSection = document.getElementById('hornSection');
+        const sirenSection = document.getElementById('sirenSection');
+        const hornSound = document.getElementById('hornSound');
+        const sirenSound = document.getElementById('sirenSound');
+
+        // Function to play horn sound
+        hornSection.addEventListener('click', () => {
+            hornSound.currentTime = 0; // Rewind to start
+            hornSound.play();
+        });
+
+        // Function to play siren sound
+        sirenSection.addEventListener('click', () => {
+            sirenSound.currentTime = 0; // Rewind to start
+            sirenSound.play();
+        });
+
+        // Optional: Prevent audio from being blocked by browsers
+        document.addEventListener('DOMContentLoaded', () => {
+            // Attempt to load audio to allow playback
+            hornSound.load();
+            sirenSound.load();
+        });
+    </script>
+
+</body>
+</html>
