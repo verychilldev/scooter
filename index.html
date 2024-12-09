@@ -87,59 +87,87 @@
         </div>
     </div>
 
-    <!-- Audio Elements -->
-    <audio id="hornSound" src="./sounds/horn.mp3" preload="auto"></audio>
-    <audio id="sirenSound" src="./sounds/siren.mp3" preload="auto"></audio>
+    <!-- Preload Audio Files -->
+    <link rel="preload" as="audio" href="./sounds/horn.mp3">
+    <link rel="preload" as="audio" href="./sounds/siren.mp3">
 
     <script>
-        // Get references to sections and audio elements
+        // Initialize Web Audio API
+        let audioContext;
+        const hornBuffer = null;
+        const sirenBuffer = null;
+
+        // Function to initialize the AudioContext
+        function initAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                console.log('AudioContext initialized');
+            }
+        }
+
+        // Function to load an audio file and decode it into a buffer
+        async function loadAudio(url) {
+            try {
+                const response = await fetch(url);
+                const arrayBuffer = await response.arrayBuffer();
+                return await audioContext.decodeAudioData(arrayBuffer);
+            } catch (error) {
+                console.error('Error loading audio file:', error);
+                return null;
+            }
+        }
+
+        // Function to play a sound from a buffer
+        function playSound(buffer) {
+            if (!buffer) {
+                console.error('No buffer to play');
+                return;
+            }
+            const source = audioContext.createBufferSource();
+            source.buffer = buffer;
+            source.connect(audioContext.destination);
+            source.start(0);
+        }
+
+        // References to sections
         const hornSection = document.getElementById('hornSection');
         const sirenSection = document.getElementById('sirenSection');
-        const hornSound = document.getElementById('hornSound');
-        const sirenSound = document.getElementById('sirenSound');
 
-        let audioInitialized = false;
+        // Audio file URLs
+        const hornURL = './sounds/horn.mp3';
+        const sirenURL = './sounds/siren.mp3';
 
-        // Function to initialize audio context
-        function initAudio() {
-            if (audioInitialized) return;
-            audioInitialized = true;
+        // Buffers to hold decoded audio data
+        let hornBufferData = null;
+        let sirenBufferData = null;
 
-            // Attempt to unlock audio on user interaction
-            hornSound.play().then(() => {
-                hornSound.pause();
-                hornSound.currentTime = 0;
-            }).catch((error) => {
-                console.log('Horn audio playback not allowed:', error);
-            });
+        // Function to handle interaction
+        async function handleInteraction(soundType, section) {
+            // Initialize AudioContext on first interaction
+            initAudioContext();
 
-            sirenSound.play().then(() => {
-                sirenSound.pause();
-                sirenSound.currentTime = 0;
-            }).catch((error) => {
-                console.log('Siren audio playback not allowed:', error);
-            });
-        }
+            // Load audio buffers if not already loaded
+            if (soundType === 'horn' && !hornBufferData) {
+                hornBufferData = await loadAudio(hornURL);
+                if (!hornBufferData) {
+                    alert('Failed to load horn sound.');
+                    return;
+                }
+            } else if (soundType === 'siren' && !sirenBufferData) {
+                sirenBufferData = await loadAudio(sirenURL);
+                if (!sirenBufferData) {
+                    alert('Failed to load siren sound.');
+                    return;
+                }
+            }
 
-        // Function to play horn sound
-        function playHorn() {
-            hornSound.currentTime = 0; // Rewind to start
-            hornSound.play().catch((error) => {
-                console.log('Error playing horn sound:', error);
-            });
-        }
+            // Play the corresponding sound
+            if (soundType === 'horn') {
+                playSound(hornBufferData);
+            } else if (soundType === 'siren') {
+                playSound(sirenBufferData);
+            }
 
-        // Function to play siren sound
-        function playSiren() {
-            sirenSound.currentTime = 0; // Rewind to start
-            sirenSound.play().catch((error) => {
-                console.log('Error playing siren sound:', error);
-            });
-        }
-
-        // Function to handle interaction (pointerdown)
-        function handleInteraction(callback, section) {
-            callback();
             // Add active class for visual feedback
             section.classList.add('active');
             // Remove active class after a short delay
@@ -148,23 +176,37 @@
             }, 150);
         }
 
-        // Unified event handler using pointerdown
-        function setupEvent(section, callback) {
-            section.addEventListener('pointerdown', (e) => {
+        // Unified event handler using pointerup
+        function setupEvent(section, soundType) {
+            section.addEventListener('pointerup', (e) => {
                 e.preventDefault(); // Prevent default behavior
-                initAudio(); // Ensure audio is initialized
-                handleInteraction(callback, section);
+                handleInteraction(soundType, section);
             });
         }
 
         // Setup events for both sections
-        setupEvent(hornSection, playHorn);
-        setupEvent(sirenSection, playSiren);
+        setupEvent(hornSection, 'horn');
+        setupEvent(sirenSection, 'siren');
 
-        // Optional: Preload audio (already set via preload="auto" in HTML)
-        document.addEventListener('DOMContentLoaded', () => {
-            hornSound.load();
-            sirenSound.load();
+        // Optional: Preload audio using Web Audio API
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Initialize AudioContext if already interacted
+            // If not, it will be initialized on first interaction
+        });
+
+        // Accessibility: Allow keyboard interaction
+        hornSection.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleInteraction('horn', hornSection);
+            }
+        });
+
+        sirenSection.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleInteraction('siren', sirenSection);
+            }
         });
     </script>
 
