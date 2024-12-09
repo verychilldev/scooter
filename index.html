@@ -17,6 +17,7 @@
             height: 100%;
             width: 100%;
             font-family: Arial, sans-serif;
+            overflow: hidden; /* Prevent scrolling */
         }
 
         /* Container to hold both sections */
@@ -34,7 +35,8 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: transform 0.1s, opacity 0.3s;
+            user-select: none; /* Prevent text selection */
         }
 
         /* Top section styles */
@@ -51,8 +53,9 @@
             font-size: 2em;
         }
 
-        /* Hover effects */
-        .section:hover {
+        /* Active state for visual feedback */
+        .section.active {
+            transform: scale(0.95);
             opacity: 0.8;
         }
 
@@ -60,6 +63,12 @@
         @media (max-width: 600px) {
             .section {
                 font-size: 1.5em;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .section {
+                font-size: 1.2em;
             }
         }
     </style>
@@ -79,8 +88,8 @@
     </div>
 
     <!-- Audio Elements -->
-    <audio id="hornSound" src="/sounds/horn.mp3"></audio>
-    <audio id="sirenSound" src="/sounds/siren.mp3"></audio>
+    <audio id="hornSound" src="./sounds/horn.mp3"></audio>
+    <audio id="sirenSound" src="./sounds/siren.mp3"></audio>
 
     <script>
         // Get references to sections and audio elements
@@ -90,23 +99,79 @@
         const sirenSound = document.getElementById('sirenSound');
 
         // Function to play horn sound
-        hornSection.addEventListener('click', () => {
+        function playHorn() {
             hornSound.currentTime = 0; // Rewind to start
             hornSound.play();
-        });
+        }
 
         // Function to play siren sound
-        sirenSection.addEventListener('click', () => {
+        function playSiren() {
             sirenSound.currentTime = 0; // Rewind to start
             sirenSound.play();
+        }
+
+        // Function to handle interaction (click or touch)
+        function handleInteraction(callback, section) {
+            callback();
+            // Add active class for visual feedback
+            section.classList.add('active');
+            // Remove active class after a short delay
+            setTimeout(() => {
+                section.classList.remove('active');
+            }, 150);
+        }
+
+        // Add event listeners for both mouse and touch events
+        hornSection.addEventListener('click', (e) => {
+            e.preventDefault(); // Prevent default behavior
+            handleInteraction(playHorn, hornSection);
         });
 
-        // Optional: Prevent audio from being blocked by browsers
+        sirenSection.addEventListener('click', (e) => {
+            e.preventDefault(); // Prevent default behavior
+            handleInteraction(playSiren, sirenSection);
+        });
+
+        // Handle touch events for better mobile support
+        hornSection.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // Prevent default behavior
+            handleInteraction(playHorn, hornSection);
+        });
+
+        sirenSection.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // Prevent default behavior
+            handleInteraction(playSiren, sirenSection);
+        });
+
+        // Optional: Preload audio to ensure it's ready to play
         document.addEventListener('DOMContentLoaded', () => {
-            // Attempt to load audio to allow playback
             hornSound.load();
             sirenSound.load();
         });
+
+        // Ensure audio plays on user interaction for mobile browsers
+        // Some mobile browsers require a user gesture to unlock audio
+        function initAudio() {
+            hornSound.play().then(() => {
+                hornSound.pause();
+                hornSound.currentTime = 0;
+            }).catch((error) => {
+                // Autoplay was prevented
+                console.log('Audio playback not allowed:', error);
+            });
+
+            sirenSound.play().then(() => {
+                sirenSound.pause();
+                sirenSound.currentTime = 0;
+            }).catch((error) => {
+                // Autoplay was prevented
+                console.log('Audio playback not allowed:', error);
+            });
+        }
+
+        // Initialize audio on first user interaction
+        document.body.addEventListener('touchstart', initAudio, { once: true });
+        document.body.addEventListener('click', initAudio, { once: true });
     </script>
 
 </body>
